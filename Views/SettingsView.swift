@@ -18,6 +18,8 @@ struct SettingsView: View {
     @AppStorage("Model") var model: String = "gpt-3.5-turbo"
     /// 是否显示API密钥帮助对话框
     @State private var showingKeyHelper = false
+    /// 一键粘贴翻译开关
+    @AppStorage("AutoPasteTranslate") var autoPasteTranslate: Bool = false
     /// 国际化管理器
     @StateObject private var localizationManager = LocalizationManager.shared
 
@@ -26,24 +28,40 @@ struct SettingsView: View {
             backgroundGradient
             
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 20) {
                     headerSection
-                    languageSelectionSection
-                    autoSwitchSection
-                    apiKeySection
-                    modelSelectionSection
-
-                    tipsSection
+                    
+                    // 应用配置
+                    settingSection(
+                        icon: "globe",
+                        title: localizationManager.localizedString(for: "app_config"),
+                        color: .white.opacity(0.8)
+                    ) {
+                        languageSelectionRow
+                        autoSwitchRow
+                        autoPasteTranslateRow
+                    }
+                    
+                    // OpenAI 配置
+                    settingSection(
+                        icon: "key.fill",
+                        title: localizationManager.localizedString(for: "openai_config"),
+                        color: .white.opacity(0.8)
+                    ) {
+                        apiKeyRow
+                        modelSelectionRow
+                    }
                     
                     Spacer(minLength: 50)
                 }
+                .padding(.horizontal, 20)
                 .padding(.bottom, 20)
             }
         }
-        .alert(localizationManager.localizedString(for: "api_key_help_title"), isPresented: $showingKeyHelper) {
-            Button(localizationManager.localizedString(for: "api_key_help_ok")) { }
+        .alert(localizationManager.localizedString(for: "api_key_help"), isPresented: $showingKeyHelper) {
+            Button(localizationManager.localizedString(for: "confirm")) { }
         } message: {
-            Text(localizationManager.localizedString(for: "api_key_help_message"))
+            Text(localizationManager.localizedString(for: "api_key_help_content"))
         }
     }
     
@@ -61,407 +79,166 @@ struct SettingsView: View {
     private var headerSection: some View {
         VStack(spacing: 8) {
             Image(systemName: "gearshape.2.fill")
-                .font(.system(size: 40))
+                .font(.system(size: 32))
                 .foregroundColor(.orange)
             
             Text(localizationManager.localizedString(for: "settings_title"))
-                .font(.title)
+                .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-            
-            Text(localizationManager.localizedString(for: "settings_subtitle"))
-                .font(.subheadline)
-                .foregroundColor(.gray)
         }
-        .padding(.top, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 10)
     }
     
-    // MARK: - 语言选择区域
-    private var languageSelectionSection: some View {
-        VStack(spacing: 16) {
-            languageSelectionHeader
-            languageOptions
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 20)
-        .background(sectionBackground)
-        .padding(.horizontal, 20)
-    }
-    
-    private var languageSelectionHeader: some View {
-        HStack {
-            Image(systemName: "globe")
-                .foregroundColor(.green)
-                .font(.system(size: 18))
-            
-            Text(localizationManager.localizedString(for: "language_setting"))
-                .font(.headline)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-            
-            Spacer()
-        }
-    }
-    
-    private var languageOptions: some View {
+    // MARK: - 设置分组
+    private func settingSection<Content: View>(
+        icon: String,
+        title: String,
+        color: Color,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
         VStack(spacing: 12) {
-            ForEach(Language.allCases, id: \.self) { language in
-                LanguageOptionView(
-                    isSelected: localizationManager.currentLanguage == language,
-                    language: language,
-                    action: {
-                        localizationManager.setLanguage(language)
-                    }
-                )
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(.orange)
+                    .font(.system(size: 16))
+                
+                Text(title)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                
+                Spacer()
+            }
+            
+            VStack(spacing: 8) {
+                content()
             }
         }
-    }
-    
-    // MARK: - 中英自动切换区域
-    private var autoSwitchSection: some View {
-        VStack(spacing: 16) {
-            autoSwitchHeader
-            autoSwitchToggle
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 20)
+        .padding(16)
         .background(sectionBackground)
-        .padding(.horizontal, 20)
     }
     
-    private var autoSwitchHeader: some View {
+    // MARK: - 语言选择行
+    private var languageSelectionRow: some View {
         HStack {
-            Image(systemName: "arrow.left.arrow.right")
-                .foregroundColor(.purple)
-                .font(.system(size: 18))
-            
-            Text(localizationManager.localizedString(for: "auto_switch_title"))
-                .font(.headline)
-                .fontWeight(.semibold)
+            Text(localizationManager.localizedString(for: "interface_language"))
                 .foregroundColor(.white)
             
             Spacer()
+            
+            Picker("", selection: $localizationManager.currentLanguage) {
+                ForEach(Language.allCases, id: \.self) { language in
+                    Text(language.displayName).tag(language)
+                }
+            }
+            .pickerStyle(MenuPickerStyle())
+            .foregroundColor(.white.opacity(0.8))
         }
+        .padding(.vertical, 8)
     }
     
-    private var autoSwitchToggle: some View {
+    // MARK: - 自动切换行
+    private var autoSwitchRow: some View {
+        HStack {
+            Text(localizationManager.localizedString(for: "smart_language_switch"))
+                .foregroundColor(.white)
+            
+            Spacer()
+            
+            Toggle("", isOn: $localizationManager.isAutoSwitchEnabled)
+                .toggleStyle(SwitchToggleStyle(tint: .orange))
+        }
+        .padding(.vertical, 8)
+    }
+    
+    // MARK: - 一键粘贴翻译行
+    private var autoPasteTranslateRow: some View {
+        HStack {
+            Text(localizationManager.localizedString(for: "paste_auto_translate"))
+                .foregroundColor(.white)
+            
+            Spacer()
+            
+            Toggle("", isOn: $autoPasteTranslate)
+                .toggleStyle(SwitchToggleStyle(tint: .orange))
+        }
+        .padding(.vertical, 8)
+    }
+    
+    // MARK: - API 密钥行
+    private var apiKeyRow: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(localizationManager.localizedString(for: "auto_switch_description"))
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray)
-                    
-                    Text(localizationManager.isAutoSwitchEnabled ? 
-                         localizationManager.localizedString(for: "auto_switch_enabled") : 
-                         localizationManager.localizedString(for: "auto_switch_disabled"))
-                        .font(.caption)
-                        .foregroundColor(localizationManager.isAutoSwitchEnabled ? .green : .gray)
-                }
+                Text(localizationManager.localizedString(for: "api_key"))
+                    .foregroundColor(.white)
                 
                 Spacer()
                 
-                Toggle("", isOn: $localizationManager.isAutoSwitchEnabled)
-                    .toggleStyle(SwitchToggleStyle(tint: .purple))
+                Button(action: {
+                    showingKeyHelper = true
+                }) {
+                    Image(systemName: "questionmark.circle")
+                        .foregroundColor(.orange)
+                        .font(.system(size: 14))
+                }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(switchBackground)
-        }
-    }
-    
-    private var switchBackground: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(Color.white.opacity(0.05))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.purple.opacity(0.3), lineWidth: 1)
-            )
-    }
-    
-    // MARK: - API密钥配置区域
-    private var apiKeySection: some View {
-        VStack(spacing: 16) {
-            apiKeyHeader
-            apiKeyInputField
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 20)
-        .background(sectionBackground)
-        .padding(.horizontal, 20)
-    }
-    
-    private var apiKeyHeader: some View {
-        HStack {
-            Image(systemName: "key.fill")
-                .foregroundColor(.orange)
-                .font(.system(size: 18))
             
-            Text(localizationManager.localizedString(for: "api_key_title"))
-                .font(.headline)
-                .fontWeight(.semibold)
+            SecureField(localizationManager.localizedString(for: "enter_openai_api_key"), text: $apiKey)
+                .font(.system(size: 14))
                 .foregroundColor(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(inputBackground)
             
-            Spacer()
-            
-            Button(action: {
-                showingKeyHelper = true
-            }) {
-                Image(systemName: "questionmark.circle")
-                    .foregroundColor(.blue)
-                    .font(.system(size: 16))
+            HStack {
+                Image(systemName: apiKey.isEmpty ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                    .foregroundColor(apiKey.isEmpty ? .orange : .green)
+                    .font(.system(size: 10))
+                
+                Text(apiKey.isEmpty ? localizationManager.localizedString(for: "please_enter_key") : localizationManager.localizedString(for: "configured"))
+                    .font(.caption)
+                    .foregroundColor(apiKey.isEmpty ? .orange : .green)
             }
         }
     }
     
-    private var apiKeyInputField: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SecureField(localizationManager.localizedString(for: "api_key_placeholder"), text: $apiKey)
-                .font(.system(size: 16))
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(inputFieldBackground)
-            
-            apiKeyStatusIndicator
-        }
-    }
-    
-    private var inputFieldBackground: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(Color.white.opacity(0.05))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-            )
-    }
-    
-    private var apiKeyStatusIndicator: some View {
+    // MARK: - 模型选择行
+    private var modelSelectionRow: some View {
         HStack {
-            Image(systemName: apiKey.isEmpty ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
-                .foregroundColor(apiKey.isEmpty ? .yellow : .green)
-                .font(.system(size: 12))
-            
-            Text(apiKey.isEmpty ? 
-                 localizationManager.localizedString(for: "api_key_description") : 
-                 localizationManager.localizedString(for: "api_key_configured"))
-                .font(.caption)
-                .foregroundColor(apiKey.isEmpty ? .yellow : .green)
-        }
-    }
-    
-    // MARK: - 模型选择区域
-    private var modelSelectionSection: some View {
-        VStack(spacing: 16) {
-            modelSelectionHeader
-            modelOptions
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 20)
-        .background(sectionBackground)
-        .padding(.horizontal, 20)
-    }
-    
-    private var modelSelectionHeader: some View {
-        HStack {
-            Image(systemName: "brain.head.profile")
-                .foregroundColor(.blue)
-                .font(.system(size: 18))
-            
-            Text(localizationManager.localizedString(for: "model_title"))
-                .font(.headline)
-                .fontWeight(.semibold)
+            Text(localizationManager.localizedString(for: "ai_model"))
                 .foregroundColor(.white)
             
             Spacer()
-        }
-    }
-    
-    private var modelOptions: some View {
-        VStack(spacing: 12) {
-            ModelOptionView(
-                isSelected: model == "gpt-3.5-turbo",
-                icon: "⚡️",
-                title: localizationManager.localizedString(for: "model_gpt35_title"),
-                description: localizationManager.localizedString(for: "model_gpt35_description"),
-                action: { model = "gpt-3.5-turbo" }
-            )
             
-            ModelOptionView(
-                isSelected: model == "gpt-4",
-                icon: "🧠",
-                title: localizationManager.localizedString(for: "model_gpt4_title"),
-                description: localizationManager.localizedString(for: "model_gpt4_description"),
-                action: { model = "gpt-4" }
-            )
+            Picker("", selection: $model) {
+                Text("GPT-3.5").tag("gpt-3.5-turbo")
+                Text("GPT-4").tag("gpt-4")
+            }
+            .pickerStyle(MenuPickerStyle())
+            .foregroundColor(.white.opacity(0.8))
         }
-    }
-    
-
-    // MARK: - 使用提示区域
-    private var tipsSection: some View {
-        VStack(spacing: 12) {
-            tipsHeader
-            tipsContent
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 20)
-        .background(sectionBackground)
-        .padding(.horizontal, 20)
-    }
-    
-    private var tipsHeader: some View {
-        HStack {
-            Image(systemName: "lightbulb.fill")
-                .foregroundColor(.yellow)
-                .font(.system(size: 18))
-            
-            Text(localizationManager.localizedString(for: "tips_title"))
-                .font(.headline)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-            
-            Spacer()
-        }
-    }
-    
-    private var tipsContent: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            TipRow(icon: "1.circle.fill", text: localizationManager.localizedString(for: "tip_1"), color: .orange)
-            TipRow(icon: "2.circle.fill", text: localizationManager.localizedString(for: "tip_2"), color: .blue)
-            TipRow(icon: "3.circle.fill", text: localizationManager.localizedString(for: "tip_3"), color: .green)
-            TipRow(icon: "4.circle.fill", text: localizationManager.localizedString(for: "tip_4"), color: .purple)
-        }
+        .padding(.vertical, 8)
     }
     
     // MARK: - 通用样式
     private var sectionBackground: some View {
-        RoundedRectangle(cornerRadius: 16)
+        RoundedRectangle(cornerRadius: 12)
             .fill(Color.white.opacity(0.05))
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.white.opacity(0.1), lineWidth: 1)
             )
     }
-}
-
-// MARK: - 语言选项视图
-struct LanguageOptionView: View {
-    let isSelected: Bool
-    let language: Language
-    let action: () -> Void
     
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Text(language == .chinese ? "🇨🇳" : "🇺🇸")
-                    .font(.system(size: 20))
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(language.displayName)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
-                    
-                    Text(LocalizationManager.shared.localizedString(for: "language_description"))
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
-                
-                Spacer()
-                
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isSelected ? .green : .gray)
-                    .font(.system(size: 20))
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(optionBackground)
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-    
-    private var optionBackground: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(isSelected ? Color.green.opacity(0.2) : Color.white.opacity(0.05))
+    private var inputBackground: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(Color.white.opacity(0.05))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(
-                        isSelected ? Color.green.opacity(0.5) : Color.white.opacity(0.1),
-                        lineWidth: 1
-                    )
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
             )
     }
 }
 
-// MARK: - 模型选项视图
-struct ModelOptionView: View {
-    let isSelected: Bool
-    let icon: String
-    let title: String
-    let description: String
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Text(icon)
-                    .font(.system(size: 20))
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
-                    
-                    Text(description)
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
-                
-                Spacer()
-                
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isSelected ? .blue : .gray)
-                    .font(.system(size: 20))
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(optionBackground)
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-    
-    private var optionBackground: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(isSelected ? Color.blue.opacity(0.2) : Color.white.opacity(0.05))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(
-                        isSelected ? Color.blue.opacity(0.5) : Color.white.opacity(0.1),
-                        lineWidth: 1
-                    )
-            )
-    }
-}
-
-// MARK: - 提示行视图
-struct TipRow: View {
-    let icon: String
-    let text: String
-    let color: Color
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundColor(color)
-                .font(.system(size: 16))
-                .frame(width: 20)
-            
-            Text(text)
-                .font(.system(size: 14))
-                .foregroundColor(.white)
-                .multilineTextAlignment(.leading)
-            
-            Spacer()
-        }
-    }
-}

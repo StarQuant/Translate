@@ -69,7 +69,7 @@ class LanguageDetector {
         }
         
         // 如果都不是中英文，但有其他语言检测结果，返回"other"
-        if let dominantLanguage = recognizer.dominantLanguage {
+        if recognizer.dominantLanguage != nil {
             return "other"
         }
         

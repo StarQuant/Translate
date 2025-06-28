@@ -25,6 +25,7 @@ import PhotosUI
 struct MainView: View {
     @StateObject private var viewModel = TranslatorViewModel()
     @StateObject private var localizationManager = LocalizationManager.shared
+    @AppStorage("AutoPasteTranslate") var autoPasteTranslate: Bool = false
     @State private var showSettings = false
     @FocusState private var isInputFocused: Bool
     @State private var keyboardHeight: CGFloat = 0
@@ -33,17 +34,13 @@ struct MainView: View {
         NavigationView {
             GeometryReader { geometry in
                 ZStack {
-                    // 渐变背景
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.black, Color(red: 0.1, green: 0.1, blue: 0.15)]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .ignoresSafeArea()
-                    .onTapGesture {
-                        // 点击背景收回键盘
-                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                    }
+                    // 纯黑色背景
+                    Color.black
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            // 点击背景收回键盘
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        }
                     
                     VStack(spacing: 16) {
                         // 顶部语言选择区域（完全对称布局）
@@ -60,10 +57,10 @@ struct MainView: View {
                             .frame(width: 120, height: 36)
                             .background(
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color.white.opacity(0.1))
+                                    .fill(Color.blue.opacity(0.2))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 6)
-                                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
                                     )
                             )
                             
@@ -84,11 +81,11 @@ struct MainView: View {
                             }) {
                                 Image(systemName: "arrow.left.arrow.right")
                                     .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(.orange)
+                                    .foregroundColor(.white)
                                     .frame(width: 36, height: 36)
                                     .background(
                                         Circle()
-                                            .fill(Color.orange.opacity(0.2))
+                                            .fill(Color.white.opacity(0.2))
                                     )
                                     .scaleEffect(viewModel.swapButtonPressed ? 0.9 : 1.0)
                                     .rotationEffect(.degrees(viewModel.swapButtonPressed ? 180 : 0))
@@ -117,10 +114,10 @@ struct MainView: View {
                             .frame(width: 120, height: 36)
                             .background(
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color.white.opacity(0.1))
+                                    .fill(Color.blue.opacity(0.2))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 6)
-                                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
                                     )
                             )
                         }
@@ -134,31 +131,40 @@ struct MainView: View {
                                 HStack {
                                     // 左侧按钮组
                                     HStack(spacing: 8) {
-                                        // 粘贴按钮
+                                        // 复制按钮（移到左边）
                                         Button(action: {
-                                            if let pasted = UIPasteboard.general.string {
-                                                viewModel.inputText = pasted
-                                                viewModel.pasteSuccess = true
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                                    viewModel.pasteSuccess = false
-                                                }
+                                            UIPasteboard.general.string = viewModel.inputText
+                                            viewModel.copySuccess = true
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                                viewModel.copySuccess = false
                                             }
                                         }) {
-                                            Image(systemName: viewModel.pasteSuccess ? "checkmark" : "doc.on.clipboard")
+                                            Image(systemName: viewModel.copySuccess ? "checkmark" : "doc.on.doc")
                                                 .font(.system(size: 16))
-                                                .foregroundColor(viewModel.pasteSuccess ? .green : .orange)
+                                                .foregroundColor(viewModel.copySuccess ? .green : .orange)
                                                 .frame(width: 40, height: 32)
                                                 .background(
                                                     RoundedRectangle(cornerRadius: 6)
-                                                        .fill(viewModel.pasteSuccess ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
+                                                        .fill(viewModel.copySuccess ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
                                                 )
                                         }
                                         
-                                        // 拍照按钮
-                                        Button(action: {
-                                            viewModel.imageSourceType = .camera
-                                            viewModel.showImagePicker = true
-                                        }) {
+                                        // 图片选择按钮（合并相机和相册）
+                                        Menu {
+                                            Button(action: {
+                                                viewModel.imageSourceType = .camera
+                                                viewModel.showImagePicker = true
+                                            }) {
+                                                Label(localizationManager.localizedString(for: "camera"), systemImage: "camera")
+                                            }
+                                            
+                                            Button(action: {
+                                                viewModel.imageSourceType = .photoLibrary
+                                                viewModel.showImagePicker = true
+                                            }) {
+                                                Label(localizationManager.localizedString(for: "from_photo_library"), systemImage: "photo")
+                                            }
+                                        } label: {
                                             Image(systemName: "camera")
                                                 .font(.system(size: 16))
                                                 .foregroundColor(.blue)
@@ -168,74 +174,59 @@ struct MainView: View {
                                                         .fill(Color.blue.opacity(0.2))
                                                 )
                                         }
-                                        
-                                        // 相册按钮
-                                        Button(action: {
-                                            viewModel.imageSourceType = .photoLibrary
-                                            viewModel.showImagePicker = true
-                                        }) {
-                                            Image(systemName: "photo")
-                                                .font(.system(size: 16))
-                                                .foregroundColor(.purple)
-                                                .frame(width: 40, height: 32)
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .fill(Color.purple.opacity(0.2))
-                                                )
-                                        }
                                     }
                                     
                                     Spacer()
                                     
-                                    // 复制按钮（右边）
+                                    // 粘贴按钮（移到右边）
                                     Button(action: {
-                                        UIPasteboard.general.string = viewModel.inputText
-                                        viewModel.copySuccess = true
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                            viewModel.copySuccess = false
+                                        if let pasted = UIPasteboard.general.string {
+                                            viewModel.inputText = pasted
+                                            viewModel.pasteSuccess = true
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                                viewModel.pasteSuccess = false
+                                            }
+                                            
+                                            // 如果开启一键粘贴翻译，自动开始翻译
+                                            if autoPasteTranslate {
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                    viewModel.translate()
+                                                }
+                                            }
                                         }
                                     }) {
-                                        Image(systemName: viewModel.copySuccess ? "checkmark" : "doc.on.doc")
+                                        Image(systemName: viewModel.pasteSuccess ? "checkmark" : "doc.on.clipboard")
                                             .font(.system(size: 16))
-                                            .foregroundColor(viewModel.copySuccess ? .green : .orange)
+                                            .foregroundColor(viewModel.pasteSuccess ? .green : .orange)
                                             .frame(width: 40, height: 32)
                                             .background(
                                                 RoundedRectangle(cornerRadius: 6)
-                                                    .fill(viewModel.copySuccess ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
+                                                    .fill(viewModel.pasteSuccess ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
                                             )
                                     }
                                 }
                                 .padding(.horizontal)
                             } else {
-                                // 当没有内容时，显示功能按钮（粘贴、拍照、相册）
+                                // 当没有内容时，显示功能按钮（图片选择、粘贴）
                                 HStack {
                                     // 左侧按钮组
                                     HStack(spacing: 8) {
-                                        // 粘贴按钮
-                                        Button(action: {
-                                            if let pasted = UIPasteboard.general.string {
-                                                viewModel.inputText = pasted
-                                                viewModel.pasteSuccess = true
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                                    viewModel.pasteSuccess = false
-                                                }
+                                        // 图片选择按钮（合并相机和相册）
+                                        Menu {
+                                            Button(action: {
+                                                viewModel.imageSourceType = .camera
+                                                viewModel.showImagePicker = true
+                                            }) {
+                                                Label(localizationManager.localizedString(for: "camera"), systemImage: "camera")
                                             }
-                                        }) {
-                                            Image(systemName: viewModel.pasteSuccess ? "checkmark" : "doc.on.clipboard")
-                                                .font(.system(size: 16))
-                                                .foregroundColor(viewModel.pasteSuccess ? .green : .orange)
-                                                .frame(width: 40, height: 32)
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .fill(viewModel.pasteSuccess ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
-                                                )
-                                        }
-                                        
-                                        // 拍照按钮
-                                        Button(action: {
-                                            viewModel.imageSourceType = .camera
-                                            viewModel.showImagePicker = true
-                                        }) {
+                                            
+                                            Button(action: {
+                                                viewModel.imageSourceType = .photoLibrary
+                                                viewModel.showImagePicker = true
+                                            }) {
+                                                Label(localizationManager.localizedString(for: "from_photo_library"), systemImage: "photo")
+                                            }
+                                        } label: {
                                             Image(systemName: "camera")
                                                 .font(.system(size: 16))
                                                 .foregroundColor(.blue)
@@ -245,24 +236,36 @@ struct MainView: View {
                                                         .fill(Color.blue.opacity(0.2))
                                                 )
                                         }
-                                        
-                                        // 相册按钮
-                                        Button(action: {
-                                            viewModel.imageSourceType = .photoLibrary
-                                            viewModel.showImagePicker = true
-                                        }) {
-                                            Image(systemName: "photo")
-                                                .font(.system(size: 16))
-                                                .foregroundColor(.purple)
-                                                .frame(width: 40, height: 32)
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .fill(Color.purple.opacity(0.2))
-                                                )
-                                        }
                                     }
                                     
                                     Spacer()
+                                    
+                                    // 粘贴按钮（移到右边）
+                                    Button(action: {
+                                        if let pasted = UIPasteboard.general.string {
+                                            viewModel.inputText = pasted
+                                            viewModel.pasteSuccess = true
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                                viewModel.pasteSuccess = false
+                                            }
+                                            
+                                            // 如果开启一键粘贴翻译，自动开始翻译
+                                            if autoPasteTranslate {
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                    viewModel.translate()
+                                                }
+                                            }
+                                        }
+                                    }) {
+                                        Image(systemName: viewModel.pasteSuccess ? "checkmark" : "doc.on.clipboard")
+                                            .font(.system(size: 16))
+                                            .foregroundColor(viewModel.pasteSuccess ? .green : .orange)
+                                            .frame(width: 40, height: 32)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 6)
+                                                    .fill(viewModel.pasteSuccess ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
+                                            )
+                                    }
                                 }
                                 .padding(.horizontal)
                             }
@@ -274,10 +277,11 @@ struct MainView: View {
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 12)
                                             .stroke(
-                                                isInputFocused ? Color.orange : Color.gray.opacity(0.3),
-                                                lineWidth: isInputFocused ? 2 : 1
+                                                isInputFocused ? Color.white.opacity(0.4) : Color.gray.opacity(0.3),
+                                                lineWidth: 1
                                             )
                                     )
+                                    .shadow(color: Color.white.opacity(0.03), radius: 5, x: 0, y: 0)
                                 
                                 TextEditor(text: $viewModel.inputText)
                                     .padding(8)
@@ -299,10 +303,10 @@ struct MainView: View {
                                     VStack(spacing: 8) {
                                         ProgressView()
                                             .scaleEffect(1.2)
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                         Text(localizationManager.localizedString(for: "recognizing_text"))
                                             .font(.caption)
-                                            .foregroundColor(.orange)
+                                            .foregroundColor(.white.opacity(0.8))
                                     }
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 14)
@@ -344,11 +348,11 @@ struct MainView: View {
                                         }) {
                                             Image(systemName: viewModel.resultCopySuccess ? "checkmark" : "doc.on.doc")
                                                 .font(.system(size: 16))
-                                                .foregroundColor(.green)
+                                                .foregroundColor(.white)
                                                 .frame(width: 40, height: 32)
                                                 .background(
                                                     RoundedRectangle(cornerRadius: 6)
-                                                        .fill(Color.green.opacity(0.2))
+                                                        .fill(Color.green.opacity(0.8))
                                                 )
                                         }
                                     }
@@ -364,10 +368,10 @@ struct MainView: View {
                                         .textSelection(.enabled)
                                         .background(
                                             RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.green.opacity(0.1))
+                                                .fill(Color.blue.opacity(0.3))
                                                 .overlay(
                                                     RoundedRectangle(cornerRadius: 12)
-                                                        .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                                                        .stroke(Color.blue.opacity(0.4), lineWidth: 1)
                                                 )
                                         )
                                 }
@@ -421,14 +425,14 @@ struct MainView: View {
                                     if !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                                         Button(action: {
                                             if viewModel.isTranslating {
-                                                // 如果正在翻译，则取消
                                                 viewModel.cancelTranslation()
                                             } else {
-                                                // 如果没有翻译，则开始翻译
-                                                viewModel.translate()
+                                                // 如果正在显示键盘，先收起键盘
                                                 if isInputFocused {
                                                     isInputFocused = false
                                                 }
+                                                // 开始翻译
+                                                viewModel.translate()
                                             }
                                         }) {
                                             HStack(spacing: 8) {
@@ -458,11 +462,7 @@ struct MainView: View {
                                 .padding(.vertical, 16)
                                 .padding(.bottom, keyboardHeight > 0 ? keyboardHeight - geometry.safeAreaInsets.bottom : 0)
                                 .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [Color.black.opacity(0.95), Color.black.opacity(0.85)]),
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
+                                    Color.black
                                 )
                             }
                         }
@@ -500,7 +500,7 @@ struct MainView: View {
                             Button(LocalizationManager.shared.localizedString(for: "done")) {
                                 showSettings = false
                             }
-                            .foregroundColor(.orange)
+                            .foregroundColor(.white.opacity(0.8))
                         }
                     }
             }

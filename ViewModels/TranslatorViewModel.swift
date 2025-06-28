@@ -60,6 +60,8 @@ class TranslatorViewModel: NSObject, ObservableObject {
     // MARK: - 图片识别相关属性
     /// 是否显示图片选择器
     @Published var showImagePicker = false
+    /// 是否显示图片来源选择菜单
+    @Published var showImageSourceMenu = false
     /// 选中的图片
     @Published var selectedImage: UIImage?
     /// 图片来源类型（相机或相册）

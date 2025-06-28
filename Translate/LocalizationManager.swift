@@ -182,7 +182,22 @@ class LocalizationManager: ObservableObject {
         "auto_switch_title": "中英自动切换",
         "auto_switch_description": "根据输入文本自动切换目标语言",
         "auto_switch_enabled": "已开启自动切换",
-        "auto_switch_disabled": "已关闭自动切换"
+        "auto_switch_disabled": "已关闭自动切换",
+        
+        // 新增设置页面文字
+        "app_config": "应用配置",
+        "openai_config": "OpenAI 配置",
+        "interface_language": "界面语言",
+        "smart_language_switch": "智能语言切换",
+        "paste_auto_translate": "粘贴自动翻译",
+        "api_key": "API 密钥",
+        "ai_model": "AI 模型",
+        "enter_openai_api_key": "输入 OpenAI API 密钥",
+        "please_enter_key": "请输入密钥",
+        "configured": "已配置",
+        "api_key_help": "API 密钥帮助",
+        "confirm": "确定",
+        "api_key_help_content": "请在 OpenAI 官网获取 API 密钥\n访问: https://platform.openai.com/api-keys"
     ]
     
     // MARK: - 英文本地化
@@ -263,7 +278,22 @@ class LocalizationManager: ObservableObject {
         "auto_switch_title": "Auto Chinese-English Switch",
         "auto_switch_description": "Automatically switch target language based on input text",
         "auto_switch_enabled": "Auto switch enabled",
-        "auto_switch_disabled": "Auto switch disabled"
+        "auto_switch_disabled": "Auto switch disabled",
+        
+        // New settings page text
+        "app_config": "App Configuration",
+        "openai_config": "OpenAI Configuration",
+        "interface_language": "Interface Language",
+        "smart_language_switch": "Smart Language Switch",
+        "paste_auto_translate": "Paste Auto Translate",
+        "api_key": "API Key",
+        "ai_model": "AI Model",
+        "enter_openai_api_key": "Enter OpenAI API Key",
+        "please_enter_key": "Please enter key",
+        "configured": "Configured",
+        "api_key_help": "API Key Help",
+        "confirm": "OK",
+        "api_key_help_content": "Please get API key from OpenAI website\nVisit: https://platform.openai.com/api-keys"
     ]
 }
 
