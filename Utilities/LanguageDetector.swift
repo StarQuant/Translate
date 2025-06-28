@@ -40,22 +40,14 @@ class LanguageDetector {
         // 获取语言检测结果和置信度
         let languageHypotheses = recognizer.languageHypotheses(withMaximum: 5)
         
-        // 打印调试信息
-        print("🔍 语言检测详情:")
-        for (language, confidence) in languageHypotheses {
-            print("  - \(language.rawValue): \(String(format: "%.2f", confidence))")
-        }
-        
         // 如果没有检测结果，返回nil
         guard !languageHypotheses.isEmpty else {
-            print("  ❌ 无检测结果")
             return nil
         }
         
         // 检查是否有中文检测结果
         for (language, confidence) in languageHypotheses {
             if isChineseLanguage(language) && confidence > 0.3 {
-                print("  ✅ 检测到中文，置信度: \(confidence)")
                 return "zh"
             }
         }
@@ -63,14 +55,12 @@ class LanguageDetector {
         // 检查是否有英文检测结果
         for (language, confidence) in languageHypotheses {
             if language == .english && confidence > 0.3 {
-                print("  ✅ 检测到英文，置信度: \(confidence)")
                 return "en"
             }
         }
         
         // 使用最高置信度的结果
         if let dominantLanguage = recognizer.dominantLanguage {
-            print("  🎯 主导语言: \(dominantLanguage.rawValue)")
             if isChineseLanguage(dominantLanguage) {
                 return "zh"
             } else if dominantLanguage == .english {
@@ -80,11 +70,9 @@ class LanguageDetector {
         
         // 如果都不是中英文，但有其他语言检测结果，返回"other"
         if let dominantLanguage = recognizer.dominantLanguage {
-            print("  ⚠️ 其他语言: \(dominantLanguage.rawValue)")
             return "other"
         }
         
-        print("  ❌ 无法确定语言")
         return nil
     }
     
@@ -109,30 +97,19 @@ class LanguageDetector {
      * - Returns: 推荐的目标语言代码
      */
     func getTargetLanguage(for detectedLanguage: String?) -> String? {
-        print("🔧 getTargetLanguage 输入: \(detectedLanguage ?? "nil")")
-        
         guard let detected = detectedLanguage else {
-            print("🔧 检测语言为nil，返回nil")
             return nil
         }
         
-        let result: String?
         switch detected {
         case "zh":
-            result = "en"  // 中文 -> 英文
-            print("🔧 检测到中文，推荐目标语言: 英文")
+            return "en"  // 中文 -> 英文
         case "en":
-            result = "zh"  // 英文 -> 中文
-            print("🔧 检测到英文，推荐目标语言: 中文")
+            return "zh"  // 英文 -> 中文
         case "other":
-            result = "zh"  // 其他语言 -> 中文
-            print("🔧 检测到其他语言，推荐目标语言: 中文")
+            return "zh"  // 其他语言 -> 中文
         default:
-            result = nil
-            print("🔧 未知语言类型: \(detected)，返回nil")
+            return nil
         }
-        
-        print("🔧 getTargetLanguage 返回: \(result ?? "nil")")
-        return result
     }
 } 

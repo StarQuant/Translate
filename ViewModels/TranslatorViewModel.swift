@@ -128,16 +128,10 @@ class TranslatorViewModel: NSObject, ObservableObject {
         }
 
         // 如果开启了自动切换功能，先检测语言并自动切换目标语言
-        print("🔧 自动切换开关状态: \(LocalizationManager.shared.isAutoSwitchEnabled)")
-        print("🎯 当前目标语言: \(targetLanguage)")
-        
         var detectedSourceLanguage: String? = nil
         
         if LocalizationManager.shared.isAutoSwitchEnabled {
-            print("✅ 执行自动语言切换...")
             detectedSourceLanguage = performAutoLanguageSwitch()
-        } else {
-            print("❌ 自动切换已关闭")
         }
 
         isTranslating = true
@@ -147,10 +141,8 @@ class TranslatorViewModel: NSObject, ObservableObject {
         let actualSourceLanguage: String
         if LocalizationManager.shared.isAutoSwitchEnabled, let detected = detectedSourceLanguage {
             actualSourceLanguage = detected
-            print("🎯 使用检测到的源语言: \(actualSourceLanguage)")
         } else {
             actualSourceLanguage = sourceLanguage
-            print("🎯 使用用户设置的源语言: \(actualSourceLanguage)")
         }
         
         let to = languageName(targetLanguage)
@@ -162,8 +154,6 @@ class TranslatorViewModel: NSObject, ObservableObject {
         } else {
             prompt = "Translate the following text from \(languageName(actualSourceLanguage)) to \(to). Only return the translation, no explanations:\n\n\(inputText)"
         }
-        
-        print("🤖 翻译提示词: \(prompt)")
 
         currentTranslationTask = APIService.shared.translateStream(
             prompt: prompt, 
@@ -228,32 +218,18 @@ class TranslatorViewModel: NSObject, ObservableObject {
     private func performAutoLanguageSwitch() -> String? {
         let detectedLanguage = LanguageDetector.shared.detectPrimaryLanguage(text: inputText)
         
-        print("🔍 语言检测结果: \(detectedLanguage ?? "未检测到")")
-        print("📝 输入文本: \(inputText)")
-        print("🎯 当前源语言: \(sourceLanguage)")
-        
         // 根据检测结果自动设置目标语言
         if let targetLang = LanguageDetector.shared.getTargetLanguage(for: detectedLanguage) {
-            print("🔄 自动切换目标语言: \(targetLanguage) -> \(targetLang)")
             targetLanguage = targetLang
-        } else {
-            print("⚠️ 无法确定目标语言，保持当前设置: \(targetLanguage)")
         }
         
         // 源语言切换逻辑
-        if sourceLanguage == "auto" {
-            print("✅ 源语言为自动检测，保持不变: \(sourceLanguage)")
-        } else {
+        if sourceLanguage != "auto" {
             // 源语言不是自动时，根据检测结果自动切换
             if let detected = detectedLanguage, detected != "other" {
                 if sourceLanguage != detected {
-                    print("🔄 自动切换源语言: \(sourceLanguage) -> \(detected)")
                     sourceLanguage = detected
-                } else {
-                    print("✅ 源语言已匹配检测结果: \(sourceLanguage)")
                 }
-            } else {
-                print("⚠️ 无法检测语言，保持源语言设置: \(sourceLanguage)")
             }
         }
         
