@@ -29,6 +29,7 @@ struct SettingsView: View {
                 VStack(spacing: 24) {
                     headerSection
                     languageSelectionSection
+                    autoSwitchSection
                     apiKeySection
                     modelSelectionSection
 
@@ -114,6 +115,68 @@ struct SettingsView: View {
                 )
             }
         }
+    }
+    
+    // MARK: - 中英自动切换区域
+    private var autoSwitchSection: some View {
+        VStack(spacing: 16) {
+            autoSwitchHeader
+            autoSwitchToggle
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 20)
+        .background(sectionBackground)
+        .padding(.horizontal, 20)
+    }
+    
+    private var autoSwitchHeader: some View {
+        HStack {
+            Image(systemName: "arrow.left.arrow.right")
+                .foregroundColor(.purple)
+                .font(.system(size: 18))
+            
+            Text(localizationManager.localizedString(for: "auto_switch_title"))
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+            
+            Spacer()
+        }
+    }
+    
+    private var autoSwitchToggle: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(localizationManager.localizedString(for: "auto_switch_description"))
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray)
+                    
+                    Text(localizationManager.isAutoSwitchEnabled ? 
+                         localizationManager.localizedString(for: "auto_switch_enabled") : 
+                         localizationManager.localizedString(for: "auto_switch_disabled"))
+                        .font(.caption)
+                        .foregroundColor(localizationManager.isAutoSwitchEnabled ? .green : .gray)
+                }
+                
+                Spacer()
+                
+                Toggle("", isOn: $localizationManager.isAutoSwitchEnabled)
+                    .toggleStyle(SwitchToggleStyle(tint: .purple))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(switchBackground)
+        }
+    }
+    
+    private var switchBackground: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .fill(Color.white.opacity(0.05))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.purple.opacity(0.3), lineWidth: 1)
+            )
     }
     
     // MARK: - API密钥配置区域

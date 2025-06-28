@@ -59,10 +59,18 @@ class LocalizationManager: ObservableObject {
         }
     }
     
+    /// 中英自动切换开关状态，支持自动保存到UserDefaults
+    @Published var isAutoSwitchEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isAutoSwitchEnabled, forKey: "auto_switch_enabled")
+        }
+    }
+    
     /// 私有初始化器，确保单例模式
     private init() {
         let savedLanguage = UserDefaults.standard.string(forKey: "app_language") ?? Language.chinese.rawValue
         self.currentLanguage = Language(rawValue: savedLanguage) ?? .chinese
+        self.isAutoSwitchEnabled = UserDefaults.standard.bool(forKey: "auto_switch_enabled")
     }
     
     /**
@@ -168,7 +176,13 @@ class LocalizationManager: ObservableObject {
         "filipino_voice_description": "iOS系统不支持菲律宾语原生语音，请选择替代语音",
         "voice_american_english": "美式英语（推荐）",
         "voice_british_english": "英式英语", 
-        "voice_malay": "马来语"
+        "voice_malay": "马来语",
+        
+        // 中英自动切换功能
+        "auto_switch_title": "中英自动切换",
+        "auto_switch_description": "根据输入文本自动切换目标语言",
+        "auto_switch_enabled": "已开启自动切换",
+        "auto_switch_disabled": "已关闭自动切换"
     ]
     
     // MARK: - 英文本地化
@@ -243,7 +257,13 @@ class LocalizationManager: ObservableObject {
         "filipino_voice_description": "iOS doesn't support native Filipino voice, please choose alternative",
         "voice_american_english": "American English (Recommended)",
         "voice_british_english": "British English",
-        "voice_malay": "Malay"
+        "voice_malay": "Malay",
+        
+        // Auto language switch feature
+        "auto_switch_title": "Auto Chinese-English Switch",
+        "auto_switch_description": "Automatically switch target language based on input text",
+        "auto_switch_enabled": "Auto switch enabled",
+        "auto_switch_disabled": "Auto switch disabled"
     ]
 }
 
