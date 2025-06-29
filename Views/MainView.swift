@@ -27,8 +27,11 @@ struct MainView: View {
     @StateObject private var localizationManager = LocalizationManager.shared
     @AppStorage("AutoPasteTranslate") var autoPasteTranslate: Bool = false
     @State private var showSettings = false
+    @State private var showFullScreen = false  // 添加全屏sheet状态
     @FocusState private var isInputFocused: Bool
     @State private var keyboardHeight: CGFloat = 0
+    @State private var isFullScreen = false  // 添加全屏状态
+    @State private var textEditorHeight: CGFloat = 45  // 添加文本编辑器高度状态
     
     var body: some View {
         NavigationView {
@@ -141,11 +144,11 @@ struct MainView: View {
                                         }) {
                                             Image(systemName: viewModel.copySuccess ? "checkmark" : "doc.on.doc")
                                                 .font(.system(size: 16))
-                                                .foregroundColor(viewModel.copySuccess ? .green : .orange)
+                                                .foregroundColor(viewModel.copySuccess ? .blue : .blue)
                                                 .frame(width: 40, height: 32)
                                                 .background(
                                                     RoundedRectangle(cornerRadius: 6)
-                                                        .fill(viewModel.copySuccess ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
+                                                        .fill(viewModel.copySuccess ? Color.blue.opacity(0.2) : Color.blue.opacity(0.2))
                                                 )
                                         }
                                         
@@ -197,11 +200,11 @@ struct MainView: View {
                                     }) {
                                         Image(systemName: viewModel.pasteSuccess ? "checkmark" : "doc.on.clipboard")
                                             .font(.system(size: 16))
-                                            .foregroundColor(viewModel.pasteSuccess ? .green : .orange)
+                                            .foregroundColor(viewModel.pasteSuccess ? .blue : .blue)
                                             .frame(width: 40, height: 32)
                                             .background(
                                                 RoundedRectangle(cornerRadius: 6)
-                                                    .fill(viewModel.pasteSuccess ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
+                                                    .fill(viewModel.pasteSuccess ? Color.blue.opacity(0.2) : Color.blue.opacity(0.2))
                                             )
                                     }
                                 }
@@ -259,11 +262,11 @@ struct MainView: View {
                                     }) {
                                         Image(systemName: viewModel.pasteSuccess ? "checkmark" : "doc.on.clipboard")
                                             .font(.system(size: 16))
-                                            .foregroundColor(viewModel.pasteSuccess ? .green : .orange)
+                                            .foregroundColor(viewModel.pasteSuccess ? .blue : .blue)
                                             .frame(width: 40, height: 32)
                                             .background(
                                                 RoundedRectangle(cornerRadius: 6)
-                                                    .fill(viewModel.pasteSuccess ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
+                                                    .fill(viewModel.pasteSuccess ? Color.blue.opacity(0.2) : Color.blue.opacity(0.2))
                                             )
                                     }
                                 }
@@ -286,13 +289,13 @@ struct MainView: View {
                                 TextEditor(text: $viewModel.inputText)
                                     .padding(8)
                                     .font(.system(size: 16))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.gray)
                                     .background(Color.clear)
                                     .focused($isInputFocused)
                                 
                                 if viewModel.inputText.isEmpty && !viewModel.isRecognizingText {
                                     Text(localizationManager.localizedString(for: "input_placeholder"))
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(.white.opacity(0.6))
                                         .font(.system(size: 16))
                                         .padding(.horizontal, 16)
                                         .padding(.vertical, 14)
@@ -323,22 +326,34 @@ struct MainView: View {
                                     Spacer()
                                     
                                     HStack(spacing: 12) {
+                                        // 全屏查看按钮
+                                        Button(action: {
+                                            showFullScreen = true
+                                        }) {
+                                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                                .font(.system(size: 16))
+                                                .foregroundColor(.blue)
+                                                .frame(width: 40, height: 32)
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 6)
+                                                        .fill(Color.blue.opacity(0.2))
+                                                )
+                                        }
+                                        
                                         // 语音朗读按钮
                                         Button(action: {
-                                    
                                             viewModel.speak()
                                         }) {
                                             Image(systemName: viewModel.isSpeaking ? "speaker.wave.2.fill" : "speaker.2")
                                                 .font(.system(size: 16))
-                                                .foregroundColor(viewModel.isSpeaking ? .orange : .blue)
+                                                .foregroundColor(viewModel.isSpeaking ? .blue : .blue)
                                                 .frame(width: 40, height: 32)
                                                 .background(
                                                     RoundedRectangle(cornerRadius: 6)
-                                                        .fill(viewModel.isSpeaking ? Color.orange.opacity(0.2) : Color.blue.opacity(0.2))
+                                                        .fill(viewModel.isSpeaking ? Color.blue.opacity(0.2) : Color.blue.opacity(0.2))
                                                 )
                                         }
                                         
-                                        // 复制按钮
                                         Button(action: {
                                             UIPasteboard.general.string = viewModel.translatedText
                                             viewModel.resultCopySuccess = true
@@ -348,11 +363,11 @@ struct MainView: View {
                                         }) {
                                             Image(systemName: viewModel.resultCopySuccess ? "checkmark" : "doc.on.doc")
                                                 .font(.system(size: 16))
-                                                .foregroundColor(.white)
+                                                .foregroundColor(.blue)
                                                 .frame(width: 40, height: 32)
                                                 .background(
                                                     RoundedRectangle(cornerRadius: 6)
-                                                        .fill(Color.green.opacity(0.8))
+                                                        .fill(Color.blue.opacity(0.2))
                                                 )
                                         }
                                     }
@@ -375,17 +390,17 @@ struct MainView: View {
                                                 )
                                         )
                                 }
-                                .frame(minHeight: 80, maxHeight: 250)
+                                .frame(minHeight: 80, maxHeight: isFullScreen ? .infinity : 250)
                                 .padding(.horizontal)
                             }
                         }
                         
-                        Spacer()
+                        Spacer(minLength: 1)
                         
                         // 底部操作栏 - 有内容时显示或键盘弹出时显示键盘收回按钮
                         if !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isInputFocused {
                             VStack(spacing: 0) {
-                                HStack(spacing: 16) {
+                                HStack(spacing: 5) {
                                     // 左侧删除按钮（仅在有内容时显示）
                                     if !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                                         Button(action: {
@@ -453,13 +468,13 @@ struct MainView: View {
                                             .padding(.vertical, 12)
                                             .background(
                                                 RoundedRectangle(cornerRadius: 22)
-                                                    .fill(viewModel.isTranslating ? Color.red : Color.orange)
+                                                    .fill(Color.blue)
                                             )
                                         }
                                     }
                                 }
                                 .padding(.horizontal, 20)
-                                .padding(.vertical, 16)
+                                .padding(.vertical, 8)
                                 .padding(.bottom, keyboardHeight > 0 ? keyboardHeight - geometry.safeAreaInsets.bottom : 0)
                                 .background(
                                     Color.black
@@ -484,7 +499,7 @@ struct MainView: View {
                             showSettings = true
                         }) {
                             Image(systemName: "gearshape.fill")
-                                .foregroundColor(.orange)
+                                .foregroundColor(.blue)
                                 .font(.system(size: 18))
                         }
                     }
@@ -504,6 +519,38 @@ struct MainView: View {
                         }
                     }
             }
+        }
+        .sheet(isPresented: $showFullScreen) {
+            NavigationView {
+                ScrollView {
+                    Text(viewModel.translatedText)
+                        .foregroundColor(.white)
+                        .font(.system(size: 18))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                        .textSelection(.enabled)
+                }
+                .background(
+                    Color.blue.opacity(0.3)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 0)
+                                .stroke(Color.blue.opacity(0.4), lineWidth: 1)
+                        )
+                )
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                            showFullScreen = false
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.white.opacity(0.8))
+                                .font(.system(size: 20))
+                        }
+                    }
+                }
+            }
+            .background(Color.black)
         }
         .sheet(isPresented: $viewModel.showImagePicker) {
             ImagePicker(
