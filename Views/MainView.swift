@@ -288,7 +288,7 @@ struct MainView: View {
                                 
                                 TextEditor(text: $viewModel.inputText)
                                     .padding(8)
-                                    .font(.system(size: 16))
+                                    .font(.system(size: 17))
                                     .foregroundColor(.gray)
                                     .background(Color.clear)
                                     .focused($isInputFocused)
@@ -377,8 +377,8 @@ struct MainView: View {
                                 ScrollView {
                                     VStack {
                                         Text(viewModel.translatedText)
-                                            .foregroundColor(.white)
-                                            .font(.system(size: 16))
+                                            .foregroundColor(.cyan)
+                                            .font(.system(size: 17))
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                             .padding(12)
                                             .textSelection(.enabled)
@@ -531,8 +531,8 @@ struct MainView: View {
             NavigationView {
                 ScrollView {
                     Text(viewModel.translatedText)
-                        .foregroundColor(.white)
-                        .font(.system(size: 18))
+                        .foregroundColor(.cyan)
+                        .font(.system(size: 19))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(16)
                         .textSelection(.enabled)
