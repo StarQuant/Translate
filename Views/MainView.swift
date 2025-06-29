@@ -315,7 +315,7 @@ struct MainView: View {
                                     .padding(.vertical, 14)
                                 }
                             }
-                            .frame(minHeight: 100, maxHeight: 200)
+                            .frame(minHeight: 80, maxHeight: 150)
                             .padding(.horizontal)
                         }
                         
@@ -375,27 +375,34 @@ struct MainView: View {
                                 .padding(.horizontal)
                                 
                                 ScrollView {
-                                    Text(viewModel.translatedText)
-                                        .foregroundColor(.white)
-                                        .font(.system(size: 16))
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(12)
-                                        .textSelection(.enabled)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.blue.opacity(0.3))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .stroke(Color.blue.opacity(0.4), lineWidth: 1)
-                                                )
-                                        )
+                                    VStack {
+                                        Text(viewModel.translatedText)
+                                            .foregroundColor(.white)
+                                            .font(.system(size: 16))
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(12)
+                                            .textSelection(.enabled)
+                                        
+                                        Spacer()
+                                    }
                                 }
-                                .frame(minHeight: 80, maxHeight: isFullScreen ? .infinity : 250)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.blue.opacity(0.3))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color.blue.opacity(0.4), lineWidth: 1)
+                                        )
+                                )
                                 .padding(.horizontal)
                             }
                         }
                         
-                        Spacer(minLength: 1)
+                        // 只在没有翻译结果时显示Spacer
+                        if viewModel.translatedText.isEmpty {
+                            Spacer(minLength: 1)
+                        }
                         
                         // 底部操作栏 - 有内容时显示或键盘弹出时显示键盘收回按钮
                         if !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isInputFocused {
@@ -536,6 +543,7 @@ struct MainView: View {
                             RoundedRectangle(cornerRadius: 0)
                                 .stroke(Color.blue.opacity(0.4), lineWidth: 1)
                         )
+                        .ignoresSafeArea()
                 )
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -551,6 +559,9 @@ struct MainView: View {
                 }
             }
             .background(Color.black)
+            .presentationDetents([.large])
+            .presentationDragIndicator(.hidden)
+            .interactiveDismissDisabled(true)
         }
         .sheet(isPresented: $viewModel.showImagePicker) {
             ImagePicker(
