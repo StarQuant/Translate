@@ -315,7 +315,7 @@ struct MainView: View {
                                     .padding(.vertical, 14)
                                 }
                             }
-                            .frame(minHeight: 80, maxHeight: 150)
+                            .frame(minHeight: 100, maxHeight: 180)
                             .padding(.horizontal)
                         }
                         
@@ -414,8 +414,8 @@ struct MainView: View {
                             }
                         }
                         
-                        // 只在没有翻译结果且不在翻译中时显示Spacer
-                        if viewModel.translatedText.isEmpty && !viewModel.isTranslating {
+                        // 在键盘存在或无结果框存在时显示Spacer
+                        if keyboardHeight > 0 || (viewModel.translatedText.isEmpty && !viewModel.isTranslating) {
                             Spacer(minLength: 1)
                         }
                         
@@ -545,12 +545,31 @@ struct MainView: View {
         .sheet(isPresented: $showFullScreen) {
             NavigationView {
                 ScrollView {
-                    Text(viewModel.translatedText)
-                        .foregroundColor(.cyan)
-                        .font(.system(size: 19))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(16)
-                        .textSelection(.enabled)
+                    VStack {
+                        if viewModel.isTranslating && viewModel.translatedText.isEmpty {
+                            // 翻译中的状态显示
+                            VStack(spacing: 12) {
+                                ProgressView()
+                                    .scaleEffect(1.5)
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .cyan))
+                                Text(localizationManager.localizedString(for: "translating"))
+                                    .font(.title3)
+                                    .foregroundColor(.cyan.opacity(0.8))
+                            }
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(32)
+                        } else {
+                            // 翻译结果显示 - 支持流式更新
+                            Text(viewModel.translatedText.isEmpty ? "" : viewModel.translatedText)
+                                .foregroundColor(.cyan)
+                                .font(.system(size: 19))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(16)
+                                .textSelection(.enabled)
+                        }
+                        
+                        Spacer()
+                    }
                 }
                 .background(
                     Color.blue.opacity(0.15)
