@@ -319,8 +319,8 @@ struct MainView: View {
                             .padding(.horizontal)
                         }
                         
-                        // 翻译结果区域 - 键盘显示时隐藏
-                        if !viewModel.translatedText.isEmpty && keyboardHeight <= 0 {
+                        // 翻译结果区域 - 键盘显示时隐藏，在开始翻译时立即显示
+                        if (viewModel.isTranslating || !viewModel.translatedText.isEmpty) && keyboardHeight <= 0 {
                             VStack(spacing: 12) {
                                 HStack {
                                     Spacer()
@@ -376,12 +376,27 @@ struct MainView: View {
                                 
                                 ScrollView {
                                     VStack {
-                                        Text(viewModel.translatedText)
-                                            .foregroundColor(.cyan)
-                                            .font(.system(size: 17))
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        if viewModel.isTranslating && viewModel.translatedText.isEmpty {
+                                            // 翻译中的状态显示
+                                            VStack(spacing: 8) {
+                                                ProgressView()
+                                                    .scaleEffect(1.2)
+                                                    .progressViewStyle(CircularProgressViewStyle(tint: .cyan))
+                                                Text(localizationManager.localizedString(for: "translating"))
+                                                    .font(.caption)
+                                                    .foregroundColor(.cyan.opacity(0.8))
+                                            }
+                                            .frame(maxWidth: .infinity, alignment: .center)
                                             .padding(12)
-                                            .textSelection(.enabled)
+                                        } else {
+                                            // 翻译结果显示
+                                            Text(viewModel.translatedText.isEmpty ? "" : viewModel.translatedText)
+                                                .foregroundColor(.cyan)
+                                                .font(.system(size: 17))
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .padding(12)
+                                                .textSelection(.enabled)
+                                        }
                                         
                                         Spacer()
                                     }
@@ -389,18 +404,18 @@ struct MainView: View {
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .background(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.blue.opacity(0.3))
+                                        .fill(Color.blue.opacity(0.15))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 12)
-                                                .stroke(Color.blue.opacity(0.4), lineWidth: 1)
+                                                .stroke(Color.blue.opacity(0.25), lineWidth: 1)
                                         )
                                 )
                                 .padding(.horizontal)
                             }
                         }
                         
-                        // 只在没有翻译结果时显示Spacer
-                        if viewModel.translatedText.isEmpty {
+                        // 只在没有翻译结果且不在翻译中时显示Spacer
+                        if viewModel.translatedText.isEmpty && !viewModel.isTranslating {
                             Spacer(minLength: 1)
                         }
                         
@@ -538,10 +553,10 @@ struct MainView: View {
                         .textSelection(.enabled)
                 }
                 .background(
-                    Color.blue.opacity(0.3)
+                    Color.blue.opacity(0.15)
                         .overlay(
                             RoundedRectangle(cornerRadius: 0)
-                                .stroke(Color.blue.opacity(0.4), lineWidth: 1)
+                                .stroke(Color.blue.opacity(0.25), lineWidth: 1)
                         )
                         .ignoresSafeArea()
                 )
