@@ -193,6 +193,10 @@ struct MainView: View {
                                             // 如果开启一键粘贴翻译，自动开始翻译
                                             if autoPasteTranslate {
                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                    // 如果正在显示键盘，先收起键盘
+                                                    if isInputFocused {
+                                                        isInputFocused = false
+                                                    }
                                                     viewModel.translate()
                                                 }
                                             }
@@ -255,6 +259,10 @@ struct MainView: View {
                                             // 如果开启一键粘贴翻译，自动开始翻译
                                             if autoPasteTranslate {
                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                    // 如果正在显示键盘，先收起键盘
+                                                    if isInputFocused {
+                                                        isInputFocused = false
+                                                    }
                                                     viewModel.translate()
                                                 }
                                             }
@@ -549,19 +557,19 @@ struct MainView: View {
                         if viewModel.isTranslating && viewModel.translatedText.isEmpty {
                             // 翻译中的状态显示
                             VStack(spacing: 12) {
-                                ProgressView()
-                                    .scaleEffect(1.5)
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .cyan))
-                                Text(localizationManager.localizedString(for: "translating"))
-                                    .font(.title3)
-                                    .foregroundColor(.cyan.opacity(0.8))
+                                                                 ProgressView()
+                                     .scaleEffect(1.5)
+                                     .progressViewStyle(CircularProgressViewStyle(tint: .cyan))
+                                 Text(localizationManager.localizedString(for: "translating"))
+                                     .font(.title3)
+                                     .foregroundColor(.cyan.opacity(0.8))
                             }
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(32)
                         } else {
                             // 翻译结果显示 - 支持流式更新
-                            Text(viewModel.translatedText.isEmpty ? "" : viewModel.translatedText)
-                                .foregroundColor(.cyan)
+                                                         Text(viewModel.translatedText.isEmpty ? "" : viewModel.translatedText)
+                                 .foregroundColor(.cyan)
                                 .font(.system(size: 19))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(16)
