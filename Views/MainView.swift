@@ -129,73 +129,70 @@ struct MainView: View {
                         
                         // 输入区域
                         VStack(spacing: 12) {
-                            // 输入框功能按钮（扩展版）- 只在有内容时显示
-                            if !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                HStack {
-                                    // 左侧按钮组
-                                    HStack(spacing: 8) {
-                                        // 粘贴按钮（移到左边）
-                                        Button(action: {
-                                            // 如果开启自动粘贴翻译且键盘正在显示，先收起键盘
-                                            if autoPasteTranslate && isInputFocused {
-                                                isInputFocused = false
-                                            }
-                                            
-                                            if let pasted = UIPasteboard.general.string {
-                                                viewModel.inputText = pasted
-                                                viewModel.pasteSuccess = true
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                                    viewModel.pasteSuccess = false
-                                                }
-                                                
-                                                // 如果开启一键粘贴翻译，自动开始翻译
-                                                if autoPasteTranslate {
-                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                        viewModel.translate()
-                                                    }
-                                                }
-                                            }
-                                        }) {
-                                            Image(systemName: viewModel.pasteSuccess ? "checkmark" : "doc.on.clipboard")
-                                                .font(.system(size: 16))
-                                                .foregroundColor(viewModel.pasteSuccess ? .blue : .blue)
-                                                .frame(width: 40, height: 32)
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .fill(viewModel.pasteSuccess ? Color.blue.opacity(0.2) : Color.blue.opacity(0.2))
-                                                )
-                                        }
-                                        
-                                        // 图片选择按钮（合并相机和相册）
-                                        Menu {
-                                            Button(action: {
-                                                viewModel.imageSourceType = .camera
-                                                viewModel.showImagePicker = true
-                                            }) {
-                                                Label(localizationManager.localizedString(for: "camera"), systemImage: "camera")
-                                            }
-                                            
-                                            Button(action: {
-                                                viewModel.imageSourceType = .photoLibrary
-                                                viewModel.showImagePicker = true
-                                            }) {
-                                                Label(localizationManager.localizedString(for: "from_photo_library"), systemImage: "photo")
-                                            }
-                                        } label: {
-                                            Image(systemName: "camera")
-                                                .font(.system(size: 16))
-                                                .foregroundColor(.blue)
-                                                .frame(width: 40, height: 32)
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .fill(Color.blue.opacity(0.2))
-                                                )
-                                        }
+                            // 输入框功能按钮 - 始终显示相机和粘贴，有内容时添加复制
+                            HStack {
+                                // 图片选择按钮（相机）
+                                Menu {
+                                    Button(action: {
+                                        viewModel.imageSourceType = .camera
+                                        viewModel.showImagePicker = true
+                                    }) {
+                                        Label(localizationManager.localizedString(for: "camera"), systemImage: "camera")
                                     }
                                     
-                                    Spacer()
+                                    Button(action: {
+                                        viewModel.imageSourceType = .photoLibrary
+                                        viewModel.showImagePicker = true
+                                    }) {
+                                        Label(localizationManager.localizedString(for: "from_photo_library"), systemImage: "photo")
+                                    }
+                                } label: {
+                                    Image(systemName: "camera")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.blue)
+                                        .frame(width: 40, height: 32)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .fill(Color.blue.opacity(0.2))
+                                        )
+                                }
+                                
+                                // 粘贴按钮（中间）
+                                Button(action: {
+                                    // 如果开启自动粘贴翻译且键盘正在显示，先收起键盘
+                                    if autoPasteTranslate && isInputFocused {
+                                        isInputFocused = false
+                                    }
                                     
-                                    // 复制按钮（移到右边）
+                                    if let pasted = UIPasteboard.general.string {
+                                        viewModel.inputText = pasted
+                                        viewModel.pasteSuccess = true
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                            viewModel.pasteSuccess = false
+                                        }
+                                        
+                                        // 如果开启一键粘贴翻译，自动开始翻译
+                                        if autoPasteTranslate {
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                viewModel.translate()
+                                            }
+                                        }
+                                    }
+                                }) {
+                                    Image(systemName: viewModel.pasteSuccess ? "checkmark" : "doc.on.clipboard")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(viewModel.pasteSuccess ? .blue : .blue)
+                                        .frame(width: 40, height: 32)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .fill(viewModel.pasteSuccess ? Color.blue.opacity(0.2) : Color.blue.opacity(0.2))
+                                        )
+                                }
+                                
+                                Spacer()
+                                
+                                // 复制按钮（右侧，仅在有内容时显示）
+                                if !viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                                     Button(action: {
                                         UIPasteboard.general.string = viewModel.inputText
                                         viewModel.copySuccess = true
@@ -213,75 +210,8 @@ struct MainView: View {
                                             )
                                     }
                                 }
-                                .padding(.horizontal)
-                            } else {
-                                // 当没有内容时，显示功能按钮（图片选择、粘贴）
-                                HStack {
-                                    // 左侧按钮组
-                                    HStack(spacing: 8) {
-                                        // 图片选择按钮（合并相机和相册）
-                                        Menu {
-                                            Button(action: {
-                                                viewModel.imageSourceType = .camera
-                                                viewModel.showImagePicker = true
-                                            }) {
-                                                Label(localizationManager.localizedString(for: "camera"), systemImage: "camera")
-                                            }
-                                            
-                                            Button(action: {
-                                                viewModel.imageSourceType = .photoLibrary
-                                                viewModel.showImagePicker = true
-                                            }) {
-                                                Label(localizationManager.localizedString(for: "from_photo_library"), systemImage: "photo")
-                                            }
-                                        } label: {
-                                            Image(systemName: "camera")
-                                                .font(.system(size: 16))
-                                                .foregroundColor(.blue)
-                                                .frame(width: 40, height: 32)
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .fill(Color.blue.opacity(0.2))
-                                                )
-                                        }
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    // 粘贴按钮（移到右边）
-                                    Button(action: {
-                                        // 如果开启自动粘贴翻译且键盘正在显示，先收起键盘
-                                        if autoPasteTranslate && isInputFocused {
-                                            isInputFocused = false
-                                        }
-                                        
-                                        if let pasted = UIPasteboard.general.string {
-                                            viewModel.inputText = pasted
-                                            viewModel.pasteSuccess = true
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                                viewModel.pasteSuccess = false
-                                            }
-                                            
-                                            // 如果开启一键粘贴翻译，自动开始翻译
-                                            if autoPasteTranslate {
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                    viewModel.translate()
-                                                }
-                                            }
-                                        }
-                                    }) {
-                                        Image(systemName: viewModel.pasteSuccess ? "checkmark" : "doc.on.clipboard")
-                                            .font(.system(size: 16))
-                                            .foregroundColor(viewModel.pasteSuccess ? .blue : .blue)
-                                            .frame(width: 40, height: 32)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 6)
-                                                    .fill(viewModel.pasteSuccess ? Color.blue.opacity(0.2) : Color.blue.opacity(0.2))
-                                            )
-                                    }
-                                }
-                                .padding(.horizontal)
                             }
+                            .padding(.horizontal)
                             
                             // 输入框主体
                             ZStack(alignment: .topLeading) {
