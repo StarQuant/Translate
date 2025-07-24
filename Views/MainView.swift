@@ -134,21 +134,35 @@ struct MainView: View {
                                 HStack {
                                     // 左侧按钮组
                                     HStack(spacing: 8) {
-                                        // 复制按钮（移到左边）
+                                        // 粘贴按钮（移到左边）
                                         Button(action: {
-                                            UIPasteboard.general.string = viewModel.inputText
-                                            viewModel.copySuccess = true
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                                viewModel.copySuccess = false
+                                            // 如果开启自动粘贴翻译且键盘正在显示，先收起键盘
+                                            if autoPasteTranslate && isInputFocused {
+                                                isInputFocused = false
+                                            }
+                                            
+                                            if let pasted = UIPasteboard.general.string {
+                                                viewModel.inputText = pasted
+                                                viewModel.pasteSuccess = true
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                                    viewModel.pasteSuccess = false
+                                                }
+                                                
+                                                // 如果开启一键粘贴翻译，自动开始翻译
+                                                if autoPasteTranslate {
+                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                        viewModel.translate()
+                                                    }
+                                                }
                                             }
                                         }) {
-                                            Image(systemName: viewModel.copySuccess ? "checkmark" : "doc.on.doc")
+                                            Image(systemName: viewModel.pasteSuccess ? "checkmark" : "doc.on.clipboard")
                                                 .font(.system(size: 16))
-                                                .foregroundColor(viewModel.copySuccess ? .blue : .blue)
+                                                .foregroundColor(viewModel.pasteSuccess ? .blue : .blue)
                                                 .frame(width: 40, height: 32)
                                                 .background(
                                                     RoundedRectangle(cornerRadius: 6)
-                                                        .fill(viewModel.copySuccess ? Color.blue.opacity(0.2) : Color.blue.opacity(0.2))
+                                                        .fill(viewModel.pasteSuccess ? Color.blue.opacity(0.2) : Color.blue.opacity(0.2))
                                                 )
                                         }
                                         
@@ -181,34 +195,21 @@ struct MainView: View {
                                     
                                     Spacer()
                                     
-                                    // 粘贴按钮（移到右边）
+                                    // 复制按钮（移到右边）
                                     Button(action: {
-                                        if let pasted = UIPasteboard.general.string {
-                                            viewModel.inputText = pasted
-                                            viewModel.pasteSuccess = true
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                                viewModel.pasteSuccess = false
-                                            }
-                                            
-                                            // 如果开启一键粘贴翻译，自动开始翻译
-                                            if autoPasteTranslate {
-                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                    // 如果正在显示键盘，先收起键盘
-                                                    if isInputFocused {
-                                                        isInputFocused = false
-                                                    }
-                                                    viewModel.translate()
-                                                }
-                                            }
+                                        UIPasteboard.general.string = viewModel.inputText
+                                        viewModel.copySuccess = true
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                            viewModel.copySuccess = false
                                         }
                                     }) {
-                                        Image(systemName: viewModel.pasteSuccess ? "checkmark" : "doc.on.clipboard")
+                                        Image(systemName: viewModel.copySuccess ? "checkmark" : "doc.on.doc")
                                             .font(.system(size: 16))
-                                            .foregroundColor(viewModel.pasteSuccess ? .blue : .blue)
+                                            .foregroundColor(viewModel.copySuccess ? .blue : .blue)
                                             .frame(width: 40, height: 32)
                                             .background(
                                                 RoundedRectangle(cornerRadius: 6)
-                                                    .fill(viewModel.pasteSuccess ? Color.blue.opacity(0.2) : Color.blue.opacity(0.2))
+                                                    .fill(viewModel.copySuccess ? Color.blue.opacity(0.2) : Color.blue.opacity(0.2))
                                             )
                                     }
                                 }
@@ -249,6 +250,11 @@ struct MainView: View {
                                     
                                     // 粘贴按钮（移到右边）
                                     Button(action: {
+                                        // 如果开启自动粘贴翻译且键盘正在显示，先收起键盘
+                                        if autoPasteTranslate && isInputFocused {
+                                            isInputFocused = false
+                                        }
+                                        
                                         if let pasted = UIPasteboard.general.string {
                                             viewModel.inputText = pasted
                                             viewModel.pasteSuccess = true
@@ -259,10 +265,6 @@ struct MainView: View {
                                             // 如果开启一键粘贴翻译，自动开始翻译
                                             if autoPasteTranslate {
                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                    // 如果正在显示键盘，先收起键盘
-                                                    if isInputFocused {
-                                                        isInputFocused = false
-                                                    }
                                                     viewModel.translate()
                                                 }
                                             }
